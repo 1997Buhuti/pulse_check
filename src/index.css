@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-on-surface font-sans;
+    margin: 0;
+    min-height: 100vh;
+  }
+  button, a, select, input[type="button"], input[type="submit"], [role="button"] {
+    cursor: pointer;
+  }
+}
+
+.glass-card {
+  @apply bg-surface-container/60 backdrop-blur-xl border border-outline-variant/20 rounded-xl transition-all duration-300;
+}
+
+.glass-card:hover {
+  @apply bg-surface-high/70;
+}
+
+.btn-primary {
+  @apply bg-primary-container text-on-surface font-bold py-3 px-6 rounded-xl shadow-[0_0_20px_rgba(135,173,255,0.15)] transition-all active:scale-95;
+}
+
+.btn-secondary {
+  @apply bg-transparent border border-outline-variant/40 text-primary py-3 px-6 rounded-xl hover:bg-surface-low transition-all active:scale-95;
+}
