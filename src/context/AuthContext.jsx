@@ -19,9 +19,19 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    // Check for existing mock session
+    const savedMockUser = localStorage.getItem('financeflow_mock_user');
+    if (savedMockUser) {
+      setUser(JSON.parse(savedMockUser));
       setLoading(false);
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      // If we have a mock user, don't let Firebase Auth override it unless explicitly logging out
+      if (!savedMockUser) {
+        setUser(user);
+        setLoading(false);
+      }
     });
     return unsubscribe;
   }, []);
@@ -44,6 +54,21 @@ export const AuthProvider = ({ children }) => {
 
   const loginWithEmail = async (email, password) => {
     setError(null);
+    
+    // Hardcoded demo/backup login
+    if (email === 'demo@financeflow.com' && password === 'password123') {
+      const mockUser = {
+        uid: 'demo-user-123',
+        email: 'demo@financeflow.com',
+        displayName: 'Demo User',
+        isMock: true
+      };
+      setUser(mockUser);
+      setLoading(false);
+      localStorage.setItem('financeflow_mock_user', JSON.stringify(mockUser));
+      return;
+    }
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
@@ -71,7 +96,9 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
+      localStorage.removeItem('financeflow_mock_user');
       await signOut(auth);
+      setUser(null);
     } catch (err) {
       console.error("Logout Error:", err);
     }

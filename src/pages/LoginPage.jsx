@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, Activity, Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Wallet, Mail, Lock, User, ArrowRight, TrendingUp, AlertCircle } from 'lucide-react';
 
 const LoginPage = () => {
   const { loginWithGoogle, loginWithEmail, registerWithEmail, user, loading: authLoading, error } = useAuth();
@@ -40,17 +40,28 @@ const LoginPage = () => {
   const handleGoogleLogin = async () => {
     try {
       await loginWithGoogle();
-      // Redirect login won't navigate immediately here, it will redirect the whole page
     } catch (err) {
       console.error("Google Auth Fail:", err);
     }
   };
 
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    try {
+      await loginWithEmail('demo@financeflow.com', 'password123');
+      navigate('/');
+    } catch (err) {
+      console.error("Demo Login Fail:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center overflow-hidden relative">
+    <div className="min-h-screen bg-[#0b1326] flex items-center justify-center overflow-hidden relative">
       {/* Background Glows */}
-      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full animate-pulse" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-secondary/10 blur-[120px] rounded-full animate-pulse delay-700" />
+      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-500/10 blur-[120px] rounded-full animate-pulse" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/10 blur-[120px] rounded-full animate-pulse delay-700" />
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
@@ -61,107 +72,120 @@ const LoginPage = () => {
           <motion.div 
             animate={{ y: [0, -5, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="w-14 h-14 bg-gradient-to-br from-primary via-secondary to-tertiary rounded-2xl mx-auto flex items-center justify-center shadow-[0_0_30px_rgba(135,173,255,0.4)] mb-4"
+            className="w-16 h-16 bg-gradient-to-br from-indigo-600 via-indigo-500 to-emerald-500 rounded-2xl mx-auto flex items-center justify-center shadow-[0_0_30px_rgba(79,70,229,0.4)] mb-4"
           >
-            <Heart className="text-white fill-white" size={28} />
+            <Wallet className="text-white" size={32} />
           </motion.div>
-          <h1 className="text-3xl font-black tracking-tighter mb-1 italic">PULSECHECK</h1>
-          <p className="text-on-surface-variant font-medium tracking-wide uppercase text-[10px]">Violet Momentum Dashboard</p>
+          <h1 className="text-4xl font-black tracking-tighter mb-1 font-display text-white">FINANCEFLOW</h1>
+          <p className="text-white/40 font-medium tracking-widest uppercase text-[10px]">Kinetic Liquid Finance Tracker</p>
         </div>
 
-        <div className="glass-card p-8 space-y-6 bg-surface-container/40">
-          <div className="space-y-1">
-            <h2 className="text-xl font-bold">{isRegistering ? 'Create Account' : 'Welcome back'}</h2>
-            <p className="text-on-surface-variant text-xs">
-              {isRegistering ? 'Join your team and start sharing kudos' : 'Sign in to access your team dashboard'}
+        <div className="glass-card p-10 space-y-8 bg-white/5 border border-white/10 backdrop-blur-3xl shadow-2xl rounded-3xl">
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-white tracking-tight">{isRegistering ? 'Create Account' : 'Welcome back'}</h2>
+            <p className="text-white/50 text-sm">
+              {isRegistering ? 'Start your journey to financial freedom' : 'Sign in to manage your wealth'}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {isRegistering && (
-              <div className="space-y-1.5">
-                <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider ml-1">Display Name</label>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-bold text-white/40 tracking-widest ml-1">Full Name</label>
                 <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant" size={16} />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
                   <input 
                     type="text" 
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Alex Carter" 
-                    required
-                    className="w-full bg-surface-container/60 border border-outline-variant/20 rounded-xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:border-primary/50 transition-all font-medium"
+                    placeholder="John Doe" 
+                    required={isRegistering}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-indigo-500/50 transition-all font-medium placeholder:text-white/20"
                   />
                 </div>
               </div>
             )}
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider ml-1">Email Address</label>
+            <div className="space-y-2">
+              <label className="text-[10px] uppercase font-bold text-white/40 tracking-widest ml-1">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant" size={16} />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
                 <input 
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="alex@pulsecheck.com" 
+                  placeholder="name@financeflow.com" 
                   required
-                  className="w-full bg-surface-container/60 border border-outline-variant/20 rounded-xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:border-primary/50 transition-all font-medium"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-indigo-500/50 transition-all font-medium placeholder:text-white/20"
                 />
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase font-bold text-on-surface-variant tracking-wider ml-1">Password</label>
+            <div className="space-y-2">
+              <label className="text-[10px] uppercase font-bold text-white/40 tracking-widest ml-1">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant" size={16} />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
                 <input 
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••" 
                   required
-                  className="w-full bg-surface-container/60 border border-outline-variant/20 rounded-xl py-3 pl-11 pr-4 text-sm focus:outline-none focus:border-primary/50 transition-all font-medium"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-indigo-500/50 transition-all font-medium placeholder:text-white/20"
                 />
               </div>
             </div>
 
-            {error && <p className="text-error text-[10px] font-bold mt-1 ml-1">{error}</p>}
+            {error && <p className="text-rose-400 text-[11px] font-medium mt-1 ml-1 flex items-center gap-1">
+              <AlertCircle size={12} /> {error}
+            </p>}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 px-6 rounded-xl bg-primary text-on-primary font-black tracking-tight shadow-[0_4px_20px_rgba(135,173,255,0.3)] hover:shadow-[0_8px_30px_rgba(135,173,255,0.5)] transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
+              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-bold tracking-tight shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all flex items-center justify-center gap-2 group disabled:opacity-50 mt-4"
             >
-              {loading ? 'PROCESSING...' : (isRegistering ? 'CREATE ACCOUNT' : 'SIGN IN')}
-              {!loading && <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />}
+              {loading ? 'PROCESSING...' : (isRegistering ? 'GET STARTED' : 'ENTER FLOW')}
+              {!loading && <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />}
             </button>
           </form>
 
-          <div className="relative flex items-center justify-center py-2">
-            <div className="absolute inset-x-0 h-px bg-outline-variant/10" />
-            <span className="relative z-10 bg-surface-container px-4 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">or</span>
+          <div className="relative flex items-center justify-center">
+            <div className="absolute inset-x-0 h-px bg-white/10" />
+            <span className="relative z-10 bg-[#0b1326] px-4 text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">secure gateway</span>
           </div>
 
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 py-3 px-6 rounded-xl border border-outline-variant/20 hover:bg-surface-container transition-all font-bold text-sm tracking-tight"
+            className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-2xl border border-white/10 hover:bg-white/5 transition-all font-bold text-white text-sm tracking-tight group"
           >
-            <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center p-1">
+            <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center p-1 group-hover:scale-110 transition-transform">
               <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" />
             </div>
             CONTINUE WITH GOOGLE
           </button>
 
-          <div className="pt-4 border-t border-outline-variant/10 flex items-center justify-between text-[9px] text-on-surface-variant uppercase tracking-widest font-bold">
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            className="w-full py-4 px-6 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 text-white/70 hover:text-white font-bold text-xs tracking-[0.2em] transition-all flex items-center justify-center gap-2 group"
+          >
+            TRY DEMO (BACKUP LOGIN)
+          </button>
+
+          <div className="pt-2 flex flex-col items-center gap-4">
             <button 
               type="button"
               onClick={() => setIsRegistering(!isRegistering)}
-              className="text-primary hover:underline italic"
+              className="text-indigo-400 hover:text-indigo-300 text-xs font-semibold transition-colors"
             >
-              {isRegistering ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
+              {isRegistering ? 'Already have an account? Sign In' : "Don't have an account? Create one"}
             </button>
-            <Activity size={10} className="text-secondary" />
+            <div className="flex items-center gap-2 text-[10px] text-white/20 uppercase tracking-widest font-black">
+              <TrendingUp size={12} className="text-emerald-500" />
+              <span>Smart Financial Tracking</span>
+            </div>
           </div>
         </div>
       </motion.div>

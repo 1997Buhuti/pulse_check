@@ -3,9 +3,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
-import FeedPage from './pages/FeedPage';
-import LeaderboardPage from './pages/LeaderboardPage';
 import DashboardPage from './pages/DashboardPage';
+import TransactionsPage from './pages/TransactionsPage';
+import AnalysisPage from './pages/AnalysisPage';
+import ProfilePage from './pages/ProfilePage';
 import './index.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -21,24 +22,32 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={
-            <ProtectedRoute>
-              <Layout>
-                <FeedPage />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/leaderboard" element={
-            <ProtectedRoute>
-              <Layout>
-                <LeaderboardPage />
-              </Layout>
-            </ProtectedRoute>
-          } />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Layout>
                 <DashboardPage />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/transactions" element={
+            <ProtectedRoute>
+              <Layout>
+                <TransactionsPage />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/analysis" element={
+            <ProtectedRoute>
+              <Layout>
+                <AnalysisPage />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Layout>
+                <ProfilePage />
               </Layout>
             </ProtectedRoute>
           } />

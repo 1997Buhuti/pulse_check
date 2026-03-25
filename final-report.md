@@ -1,23 +1,23 @@
-# Final Report: RSL MINI-HACK '26 - PULSECHECK
+# Final Report: RSL MINI-HACK '26 - FINANCEFLOW
 
 ## Project Overview
-**PulseCheck** is a high-performance team sentiment and recognition dashboard built in 90 minutes.
+**FinanceFlow** is a premium, high-performance personal finance tracking application built in 90 minutes. It transforms the legacy "PulseCheck" into a state-of-the-art financial ecosystem.
 
-- **Hosted URL:** [https://pulsecheck-4ec45.web.app](https://pulsecheck-4ec45.web.app)
+- **Hosted URL:** [https://pulsecheck-4ec45.web.app](https://pulsecheck-4ec45.web.app) (Legacy ID)
 - **GitHub Link:** [Local Repository](file:///c:/Hackthon/pulse_check)
 
 ## AI Workflow History
-1. **Scaffolding:** Initialized Vite 6 + React 19 project.
-2. **Design Integration:** Extracted "Purple Edition" tokens from 10+ Stitch screens.
-3. **Service Layer:** Implemented Mock Auth and Kudos persistence (localStorage-backed for rapid local testing).
-4. **UI/UX:** Built 5 primary screens with glassmorphism and Framer Motion.
-5. **Verification:** Validated entire flow using Browser Agent.
+1. **Rebranding:** Renamed and restructured the entire application from a sentiment tracker to a finance tracker.
+2. **Kinetic Liquid Design:** Implemented a "No-Line" glassmorphism aesthetic using Midnight (`#0b1326`) and Indigo/Emerald tokens.
+3. **Firestore Integration:** Migrated from localStorage to persistent Cloud Firestore with secure, user-isolated data rules.
+4. **Core Features:** Built Dashboard, Transactions History, and Analysis screens with real-time summary calculations.
+5. **AI Insights:** Integrated mock financial insights (Subscription alerts, Milestone tracking).
 
 ## Notable Implementations
-- **Kinetic Monolith Theme:** Adhered to "No-Line" rule and surface hierarchy.
-- **Glassmorphism:** Applied `backdrop-blur-xl` and `bg-surface-container/60` for a premium feel.
-- **Dynamic Leaderboard:** Real-time aggregation of teammate rankings.
-- **Sentiment Widget:** Animated emoji visualizer representing team "Vibe".
+- **Kinetic Liquid Interface:** Adhered to premium surface hierarchy and tonal layering.
+- **Glassmorphism:** Applied `backdrop-blur-3xl` and `bg-white/5` for a futuristic glass feel.
+- **Smart Tracking:** Real-time balance, income, and expense aggregation with interactive category charts.
+- **Mobile Responsive:** Implemented a sleek floating glass dock for mobile users.
 
 ## Dev Setup Instructions
 1. `cd c:\Hackthon\pulse_check`

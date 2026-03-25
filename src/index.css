@@ -4,9 +4,12 @@
 
 @layer base {
   body {
-    @apply bg-background text-on-surface font-sans;
+    @apply bg-background text-on-surface font-inter;
     margin: 0;
     min-height: 100vh;
+  }
+  h1, h2, h3, h4, .font-display {
+    @apply font-manrope;
   }
   button, a, select, input[type="button"], input[type="submit"], [role="button"] {
     cursor: pointer;
@@ -14,17 +17,29 @@
 }
 
 .glass-card {
-  @apply bg-surface-container/60 backdrop-blur-xl border border-outline-variant/20 rounded-xl transition-all duration-300;
+  @apply bg-surface-container/60 backdrop-blur-[20px] rounded-3xl transition-all duration-300;
 }
 
-.glass-card:hover {
-  @apply bg-surface-high/70;
+.glass-card-hover {
+  @apply hover:bg-surface-bright/40;
 }
 
 .btn-primary {
-  @apply bg-primary-container text-on-surface font-bold py-3 px-6 rounded-xl shadow-[0_0_20px_rgba(135,173,255,0.15)] transition-all active:scale-95;
+  @apply bg-gradient-primary text-white font-bold py-3 px-8 rounded-full shadow-[0_0_30px_rgba(79,70,229,0.3)] transition-all active:scale-95;
 }
 
 .btn-secondary {
-  @apply bg-transparent border border-outline-variant/40 text-primary py-3 px-6 rounded-xl hover:bg-surface-low transition-all active:scale-95;
+  @apply bg-surface-highest text-on-surface font-semibold py-3 px-8 rounded-full hover:bg-surface-bright transition-all active:scale-95;
+}
+
+.input-field {
+  @apply bg-surface-lowest rounded-2xl px-6 py-4 focus:bg-surface-high focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all text-on-surface placeholder:text-on-surface-variant/50;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

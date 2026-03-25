@@ -1,180 +1,194 @@
-import React, { useMemo } from 'react';
-import { useKudos } from '../hooks/useKudos';
-import { Activity, Zap, TrendingUp, Users, Heart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { transactionService } from '../services/transactionService';
+import TransactionModal from '../components/TransactionModal';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  Wallet, 
+  Plus, 
+  ChevronRight, 
+  ArrowUpRight, 
+  ArrowDownLeft,
+  Calendar
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const SentimentWidget = ({ score }) => {
-  const vibes = [
-    { emoji: '😴', label: 'Idle', color: 'text-gray-500' },
-    { emoji: '⚡', label: 'Steady', color: 'text-primary' },
-    { emoji: '🚀', label: 'Surging', color: 'text-secondary' },
-    { emoji: '🔥', label: 'Electric', color: 'text-tertiary shadow-[0_0_20px_rgba(255,167,255,0.3)]' },
-  ];
-  
-  const vibeIndex = Math.min(Math.floor(score / 5), vibes.length - 1);
-  const currentVibe = vibes[vibeIndex];
+const DashboardPage = () => {
+  const { user } = useAuth();
+  const [transactions, setTransactions] = useState([]);
+  const [summary, setSummary] = useState({ income: 0, expenses: 0, balance: 0 });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  return (
-    <div className="glass-card p-10 flex flex-col items-center justify-center text-center space-y-4 bg-gradient-to-b from-surface-container/20 to-surface-low border-primary/20">
-      <motion.div
-        animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
-        transition={{ duration: 3, repeat: Infinity }}
-        className="text-8xl mb-2"
-      >
-        {currentVibe.emoji}
-      </motion.div>
-      <div className="space-y-1">
-        <h3 className={`text-4xl font-black italic tracking-tighter uppercase ${currentVibe.color}`}>
-          {currentVibe.label}
-        </h3>
-        <p className="text-on-surface-variant font-bold text-xs tracking-widest uppercase">Current Team Momentum</p>
-      </div>
+  useEffect(() => {
+    if (!user) return;
+
+    const unsubscribe = transactionService.subscribeToTransactions(user.uid, (data) => {
+      setTransactions(data.slice(0, 5)); // Only show last 5
+      
+      const sums = data.reduce((acc, curr) => {
+        if (curr.type === 'income') acc.income += curr.amount;
+        else acc.expenses += curr.amount;
+        acc.balance = acc.income - acc.expenses;
+        return acc;
+      }, { income: 0, expenses: 0, balance: 0 });
+      
+      setSummary(sums);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const handleAddTransaction = async (data) => {
+    await transactionService.addTransaction(user.uid, data);
+  };
+
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
     </div>
   );
-};
-
-const DashboardPage = () => {
-  const { kudos } = useKudos();
-
-  const analytics = useMemo(() => {
-    const totalKudos = kudos.length;
-    const uniqueContributors = new Set(kudos.map(k => k.fromId)).size;
-    
-    // Calculate Emoji Distribution
-    const emojiMap = kudos.reduce((acc, k) => {
-      acc[k.emoji] = (acc[k.emoji] || 0) + 1;
-      return acc;
-    }, {});
-    
-    const topVibes = Object.entries(emojiMap)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([emoji, count]) => ({
-        tag: emoji,
-        percentage: Math.round((count / (totalKudos || 1)) * 100)
-      }));
-
-    // Calculate Velocity (Kudos in last 24h)
-    const now = Date.now();
-    const last24h = kudos.filter(k => (now - k.timestamp) < 24 * 60 * 60 * 1000).length;
-    const velocity = (last24h / 24).toFixed(1);
-
-    // Calculate Vibe Score (Scale 0-100 based on activity & variety)
-    const vibeScore = Math.min(Math.round((totalKudos * 5) + (Object.keys(emojiMap).length * 10)), 100);
-
-    return { totalKudos, uniqueContributors, topVibes, velocity, vibeScore };
-  }, [kudos]);
-
-  const stats = [
-    { label: 'TOTAL KUDOS', value: analytics.totalKudos, icon: <Heart className="text-secondary" size={18} />, sub: 'Real-time Pulse' },
-    { label: 'ACTIVE MINDS', value: analytics.uniqueContributors, icon: <Activity className="text-primary" size={18} />, sub: 'Contributing DNA' },
-    { label: 'PEAK VELOCITY', value: analytics.velocity, icon: <Zap className="text-tertiary" size={18} />, sub: 'Kudos per hour' },
-    { label: 'VIBE SCORE', value: analytics.vibeScore, icon: <TrendingUp className="text-emerald-400" size={18} />, sub: 'Culture Heat Level' },
-  ];
 
   return (
-    <div className="space-y-12">
-      <header>
-        <h2 className="text-3xl font-black italic tracking-tighter">ANALYTICS</h2>
-        <p className="text-on-surface-variant text-sm font-medium tracking-wide uppercase">Quantifying the culture glow</p>
-      </header>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, idx) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className="glass-card p-6 space-y-4"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black text-on-surface-variant tracking-widest uppercase">{stat.label}</span>
-              {stat.icon}
-            </div>
-            <div>
-              <p className="text-4xl font-black italic">{stat.value}</p>
-              <p className="text-xs font-bold text-emerald-400 mt-1">{stat.sub}</p>
-            </div>
-          </motion.div>
-        ))}
+    <div className="space-y-10 pb-10">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h1 className="text-4xl md:text-5xl font-manrope font-bold tracking-tight text-on-surface mb-2">
+            Hey, {user?.displayName?.split(' ')[0] || 'User'}!
+          </h1>
+          <p className="text-on-surface-variant text-lg font-medium">Here's what's happening with your money.</p>
+        </div>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="btn-primary flex items-center gap-3 px-8 self-start md:self-auto"
+        >
+          <Plus size={20} strokeWidth={3} /> Add Record
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          <div className="glass-card p-8 h-[400px] flex flex-col">
-            <div className="flex items-center justify-between mb-8">
-              <h3 className="font-black italic tracking-tighter uppercase">Momentum Arc</h3>
-              <div className="flex gap-4">
-                <div className="flex items-center gap-2 text-[10px] font-bold text-on-surface-variant">
-                  <div className="w-2 h-2 rounded-full bg-primary" /> LIVE ACTIVITY
+      {/* Hero Balance Card */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 relative group">
+          <div className="absolute -inset-1 bg-gradient-primary rounded-[2.5rem] blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+          <div className="glass-card relative p-10 bg-surface-container/40 overflow-hidden ring-1 ring-white/10">
+            <div className="absolute top-0 right-0 p-12 opacity-[0.03] scale-[3] pointer-events-none">
+              <Wallet size={120} />
+            </div>
+            <div className="mb-10 text-xs font-bold text-on-surface-variant uppercase tracking-[0.3em]">Total Balance</div>
+            <div className="flex items-baseline gap-4">
+              <span className="text-6xl md:text-7xl font-manrope font-bold tracking-tighter text-primary">
+                ${summary.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </span>
+              <div className="flex items-center gap-1 px-3 py-1 bg-secondary/10 text-secondary rounded-full text-sm font-bold animate-pulse">
+                <TrendingUp size={14} /> +2.4%
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-8 mt-12 pt-10 border-t border-white/5">
+              <div>
+                <div className="flex items-center gap-2 text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-3">
+                  <ArrowDownLeft size={14} className="text-secondary" /> Monthly Income
+                </div>
+                <div className="text-2xl font-manrope font-bold text-on-surface">
+                  ${summary.income.toLocaleString()}
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-3">
+                  <ArrowUpRight size={14} className="text-tertiary" /> Total Spending
+                </div>
+                <div className="text-2xl font-manrope font-bold text-on-surface">
+                  ${summary.expenses.toLocaleString()}
                 </div>
               </div>
             </div>
-            <div className="flex-1 bg-surface-low border border-outline-variant/10 rounded-2xl flex relative overflow-hidden group">
-               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary/10 to-transparent" />
-               
-               {/* Y-Axis Numerics */}
-               <div className="absolute left-4 inset-y-8 flex flex-col justify-between text-[10px] font-black text-on-surface-variant/40 z-10">
-                 <span>100</span>
-                 <span>50</span>
-                 <span>0</span>
-               </div>
-
-               {/* X-Axis Time Slots */}
-               <div className="absolute bottom-4 inset-x-12 flex justify-between text-[10px] font-black text-on-surface-variant/40 z-10">
-                 <span>00:00</span>
-                 <span>06:00</span>
-                 <span>12:00</span>
-                 <span>18:00</span>
-                 <span>NOW</span>
-               </div>
-
-               {/* Simplified graph placeholder that pulses with actual data */}
-               <svg className="absolute inset-0 w-full h-full p-12 overflow-visible" viewBox="0 0 400 100" preserveAspectRatio="none">
-                 <motion.path
-                   d={analytics.totalKudos > 0 
-                     ? "M 0 80 Q 50 20 100 50 T 200 30 T 300 60 T 400 10" 
-                     : "M 0 80 L 400 80"}
-                   fill="none"
-                   stroke="url(#pulse-grad)"
-                   strokeWidth="4"
-                   initial={{ pathLength: 0 }}
-                   animate={{ pathLength: 1 }}
-                   transition={{ duration: 2, ease: "easeInOut" }}
-                 />
-                 <defs>
-                   <linearGradient id="pulse-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                     <stop offset="0%" stopColor="#87adff" />
-                     <stop offset="100%" stopColor="#bd82ff" />
-                   </linearGradient>
-                 </defs>
-               </svg>
-            </div>
           </div>
         </div>
 
-        <div className="space-y-8">
-          <SentimentWidget score={analytics.vibeScore} />
-          
-          <div className="glass-card p-8 space-y-6">
-            <h3 className="font-black italic tracking-tighter uppercase">Top Vibes</h3>
-            <div className="space-y-4">
-               {analytics.topVibes.length > 0 ? analytics.topVibes.map((vibe, i) => (
-                 <div key={vibe.tag} className="flex items-center justify-between">
-                   <span className="text-xl">{vibe.tag}</span>
-                   <div className="flex-1 mx-4 h-1 bg-surface-low rounded-full">
-                     <div className={`h-full rounded-full ${i === 0 ? 'bg-tertiary shadow-[0_0_10px_rgba(255,167,255,0.5)]' : 'bg-primary'}`} style={{ width: `${vibe.percentage}%` }} />
-                   </div>
-                   <span className="text-xs font-black">{vibe.percentage}%</span>
-                 </div>
-               )) : (
-                 <p className="text-center text-xs text-on-surface-variant italic py-4">No data yet</p>
-               )}
+        {/* Budget Progress Card */}
+        <div className="glass-card p-10 flex flex-col justify-between border border-white/5">
+          <div>
+            <div className="text-xs font-bold text-on-surface-variant uppercase tracking-[0.3em] mb-8">Monthly Budget</div>
+            <div className="text-4xl font-manrope font-bold text-on-surface mb-2">72% Used</div>
+            <p className="text-sm text-on-surface-variant font-medium mb-8">$1,240 of $1,800 spent</p>
+            
+            <div className="w-full h-3 bg-surface-lowest rounded-full overflow-hidden mb-4">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: '72%' }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                className="h-full bg-gradient-primary rounded-full shadow-[0_0_15px_rgba(192,193,255,0.4)]"
+              />
             </div>
           </div>
+          
+          <button className="flex items-center justify-center gap-2 py-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-sm font-bold text-on-surface-variant hover:text-on-surface">
+            Adjust Budget <ChevronRight size={16} />
+          </button>
         </div>
       </div>
+
+      {/* Transactions Section */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-manrope font-bold text-on-surface">Recent Activity</h2>
+          <button className="text-primary font-bold text-sm tracking-wide hover:underline">View All History</button>
+        </div>
+
+        <div className="space-y-4">
+          {transactions.length === 0 ? (
+            <div className="glass-card p-12 text-center border-dashed border-2 border-white/5">
+              <p className="text-on-surface-variant font-medium mb-6">No records found. Start tracking your wealth today!</p>
+              <button 
+                onClick={() => setIsModalOpen(true)}
+                className="btn-secondary inline-flex items-center gap-2"
+              >
+                <Plus size={18} /> Add Your First Record
+              </button>
+            </div>
+          ) : (
+            transactions.map((t, idx) => (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                key={t.id}
+                className="glass-card p-6 flex items-center justify-between glass-card-hover group border border-white/5"
+              >
+                <div className="flex items-center gap-5">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-lg transition-transform group-hover:scale-110 ${
+                    t.type === 'income' ? 'bg-secondary/10 text-secondary' : 'bg-tertiary/10 text-tertiary'
+                  }`}>
+                    {t.type === 'income' ? <ArrowDownLeft size={24} /> : <ArrowUpRight size={24} />}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-on-surface tracking-tight group-hover:text-primary transition-colors">{t.description || t.category}</h4>
+                    <div className="flex items-center gap-3 text-xs font-semibold text-on-surface-variant uppercase tracking-widest mt-1">
+                      <span>{t.category}</span>
+                      <span className="w-1 h-1 bg-white/20 rounded-full" />
+                      <span>{new Date(t.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className={`text-xl font-manrope font-bold ${
+                  t.type === 'income' ? 'text-secondary' : 'text-on-surface'
+                }`}>
+                  {t.type === 'income' ? '+' : '-'}${Number(t.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </div>
+              </motion.div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <TransactionModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSave={handleAddTransaction}
+      />
     </div>
   );
 };
