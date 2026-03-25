@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { transactionService } from '../services/transactionService';
+import { userProfileService } from '../services/userProfileService';
 import TransactionModal from '../components/TransactionModal';
 import { 
   TrendingUp, 
@@ -18,22 +19,49 @@ const DashboardPage = () => {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [summary, setSummary] = useState({ income: 0, expenses: 0, balance: 0 });
+  const [monthlyExpenses, setMonthlyExpenses] = useState(0);
+  const [budgetLimit, setBudgetLimit] = useState(2500); // Default budget
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
 
+    // Fetch budget limit
+    const fetchProfile = async () => {
+      const profile = await userProfileService.getUserProfile(user.uid);
+      if (profile && profile.budgetLimit) {
+        setBudgetLimit(profile.budgetLimit);
+      }
+    };
+    fetchProfile();
+
     const unsubscribe = transactionService.subscribeToTransactions(user.uid, (data) => {
       setTransactions(data.slice(0, 5)); // Only show last 5
       
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
+      let monthExp = 0;
       const sums = data.reduce((acc, curr) => {
-        if (curr.type === 'income') acc.income += curr.amount;
-        else acc.expenses += curr.amount;
+        const amount = Number(curr.amount);
+        if (curr.type === 'income') {
+          acc.income += amount;
+        } else {
+          acc.expenses += amount;
+          
+          // Check if it's in the current month for budget
+          const d = new Date(curr.date);
+          if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+            monthExp += amount;
+          }
+        }
         acc.balance = acc.income - acc.expenses;
         return acc;
       }, { income: 0, expenses: 0, balance: 0 });
       
+      setMonthlyExpenses(monthExp);
       setSummary(sums);
       setLoading(false);
     });
@@ -112,20 +140,38 @@ const DashboardPage = () => {
         <div className="glass-card p-10 flex flex-col justify-between border border-white/5">
           <div>
             <div className="text-xs font-bold text-on-surface-variant uppercase tracking-[0.3em] mb-8">Monthly Budget</div>
-            <div className="text-4xl font-manrope font-bold text-on-surface mb-2">72% Used</div>
-            <p className="text-sm text-on-surface-variant font-medium mb-8">$1,240 of $1,800 spent</p>
+            <div className="text-4xl font-manrope font-bold text-on-surface mb-2">
+              {budgetLimit > 0 ? Math.round((monthlyExpenses / budgetLimit) * 100) : 0}% Used
+            </div>
+            <p className="text-sm text-on-surface-variant font-medium mb-8">
+              ${monthlyExpenses.toLocaleString()} of ${budgetLimit.toLocaleString()} spent
+            </p>
             
             <div className="w-full h-3 bg-surface-lowest rounded-full overflow-hidden mb-4">
               <motion.div 
                 initial={{ width: 0 }}
-                animate={{ width: '72%' }}
+                animate={{ width: `${Math.min(100, (monthlyExpenses / budgetLimit) * 100)}%` }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
-                className="h-full bg-gradient-primary rounded-full shadow-[0_0_15px_rgba(192,193,255,0.4)]"
+                className={`h-full rounded-full shadow-lg ${
+                  (monthlyExpenses / budgetLimit) > 0.9 ? 'bg-tertiary shadow-tertiary/40' : 'bg-gradient-primary shadow-primary/40'
+                }`}
               />
             </div>
           </div>
           
-          <button className="flex items-center justify-center gap-2 py-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-sm font-bold text-on-surface-variant hover:text-on-surface">
+          <button 
+            onClick={async () => {
+              const newBudget = prompt("Set your monthly budget limit:", budgetLimit);
+              if (newBudget !== null) {
+                const amount = Number(newBudget);
+                if (!isNaN(amount)) {
+                  setBudgetLimit(amount);
+                  await userProfileService.updateBudgetLimit(user.uid, amount);
+                }
+              }
+            }}
+            className="flex items-center justify-center gap-2 py-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-sm font-bold text-on-surface-variant hover:text-on-surface"
+          >
             Adjust Budget <ChevronRight size={16} />
           </button>
         </div>
